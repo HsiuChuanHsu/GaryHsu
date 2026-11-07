@@ -1,0 +1,14 @@
+{
+  "name": "garyhsu",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "test": "npm run build && node --test test/smoke.mjs"
+  },
+  "dependencies": {
+    "astro": "7.4.7"
+  }
+}

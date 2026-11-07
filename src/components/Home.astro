@@ -1,0 +1,22 @@
+---
+import { posts, labels, url, type Language } from '../lib/site';
+import Site from '../layouts/Site.astro';
+
+interface Props { lang: Language }
+const { lang } = Astro.props;
+const entries = await posts();
+---
+<Site lang={lang}>
+  <section class="intro" aria-labelledby="site-title">
+    <h1 id="site-title">Gary Hsu</h1>
+  </section>
+  <section class="writing" aria-labelledby="writing-title">
+    <h2 id="writing-title">{labels[lang].articles}</h2>
+    <ol class="post-list">
+      {entries.map((entry) => <li>
+        <a href={url(`${lang === 'en' ? 'en/' : ''}posts/${entry.id}/`)}>{entry.data.title}</a>
+        <time datetime={entry.data.date.toISOString()}>{new Intl.DateTimeFormat(lang === 'zh' ? 'zh-TW' : 'en-US', { year: 'numeric', month: 'short', day: 'numeric' }).format(entry.data.date)}</time>
+      </li>)}
+    </ol>
+  </section>
+</Site>

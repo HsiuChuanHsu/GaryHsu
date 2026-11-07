@@ -1,0 +1,40 @@
+---
+import { content, labels, url, type Language } from '../lib/site';
+import '../styles.css';
+
+interface Props {
+  lang: Language;
+  title?: string;
+  languagePath?: string;
+}
+
+const { lang, title = 'Gary Hsu', languagePath } = Astro.props;
+const label = labels[lang];
+const prefix = lang === 'en' ? 'en/' : '';
+const other = lang === 'en' ? '' : 'en/';
+---
+<!doctype html>
+<html lang={lang === 'zh' ? 'zh-Hant' : 'en'}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="color-scheme" content="light" />
+    <title>{title === 'Gary Hsu' ? title : `${title} · Gary Hsu`}</title>
+    <meta name="description" content="Gary Hsu personal website" />
+  </head>
+  <body>
+    <div class="shell">
+      <header class="header">
+        <a class="wordmark" href={url(prefix)}>Gary Hsu</a>
+        <nav aria-label={lang === 'zh' ? '主選單' : 'Main navigation'}>
+          <a href={url(prefix)}>{label.articles}</a>
+          {content.about[lang] && <a href={url(`${prefix}about/`)}>{label.about}</a>}
+          {content.projects.length > 0 && <a href={url(`${prefix}work/`)}>{label.projects}</a>}
+          <a class="language" href={url(languagePath ?? other)} hreflang={other ? 'en' : 'zh-Hant'}>{label.language}</a>
+        </nav>
+      </header>
+      <main><slot /></main>
+      <footer>© {new Date().getFullYear()} Gary Hsu</footer>
+    </div>
+  </body>
+</html>

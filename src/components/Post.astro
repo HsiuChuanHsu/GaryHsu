@@ -1,0 +1,19 @@
+---
+import { render, type CollectionEntry } from 'astro:content';
+import Site from '../layouts/Site.astro';
+import { labels, url, type Language } from '../lib/site';
+
+interface Props { post: CollectionEntry<'blog'>; lang: Language }
+const { post, lang } = Astro.props;
+const { Content } = await render(post);
+---
+<Site lang={lang} title={post.data.title} languagePath={`${lang === 'en' ? '' : 'en/'}posts/${post.id}/`}>
+  <article class="article">
+    <a class="back" href={url(lang === 'en' ? 'en/' : '')}>← {labels[lang].back}</a>
+    <header>
+      <h1>{post.data.title}</h1>
+      <time datetime={post.data.date.toISOString()}>{new Intl.DateTimeFormat(lang === 'zh' ? 'zh-TW' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(post.data.date)}</time>
+    </header>
+    <div class="prose" lang={post.data.lang === 'zh' ? 'zh-Hant' : 'en'}><Content /></div>
+  </article>
+</Site>
