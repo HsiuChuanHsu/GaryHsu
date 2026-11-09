@@ -5,9 +5,30 @@ import { labels, url, type Language } from '../lib/site';
 
 interface Props { post: CollectionEntry<'blog'>; lang: Language }
 const { post, lang } = Astro.props;
-const { Content } = await render(post);
+const { Content, headings } = await render(post);
+const outline = headings.filter(({ depth }) => depth === 2 || depth === 3);
 ---
 <Site lang={lang} title={post.data.title} languagePath={`${lang === 'en' ? '' : 'en/'}posts/${post.id}/`}>
+  <aside class="reading-position" aria-label={lang === 'zh' ? '目前閱讀章節' : 'Current section'} hidden>
+    <div class="reading-position-inner">
+      <strong data-reading-chapter></strong>
+      <span data-reading-separator aria-hidden="true" hidden>›</span>
+      <span data-reading-section></span>
+    </div>
+  </aside>
+  <nav class="article-toc" aria-label={lang === 'zh' ? '文章目錄' : 'Article contents'} hidden>
+    <button class="toc-toggle" type="button" aria-expanded="false" aria-controls="article-toc-list" aria-label={lang === 'zh' ? '展開文章目錄' : 'Open article contents'} style={`grid-template-rows: repeat(${outline.length}, minmax(0, 1fr))`}>
+      {outline.map(({ depth, slug }) => <span class:list={['toc-tick', { major: depth === 2 }]} data-toc-tick={slug} aria-hidden="true"></span>)}
+    </button>
+    <ol class="toc-list" id="article-toc-list" hidden>
+      {outline.map(({ depth, slug, text }) => <li>
+        <a class:list={['toc-link', { 'toc-subsection': depth === 3 }]} href={`#${slug}`} data-toc-heading={slug}>
+          <span>{text}</span>
+          <span class:list={['toc-tick', { major: depth === 2 }]} aria-hidden="true"></span>
+        </a>
+      </li>)}
+    </ol>
+  </nav>
   <article class="article">
     <a class="back" href={url(lang === 'en' ? 'en/' : '')}>← {labels[lang].back}</a>
     <header>
@@ -16,4 +37,114 @@ const { Content } = await render(post);
     </header>
     <div class="prose" lang={post.data.lang === 'zh' ? 'zh-Hant' : 'en'}><Content /></div>
   </article>
+  <dialog class="image-dialog" aria-label={lang === 'zh' ? '放大圖片' : 'Expanded image'}>
+    <button class="image-dialog-close" type="button" aria-label={lang === 'zh' ? '關閉圖片' : 'Close image'}>×</button>
+    <img alt="" />
+  </dialog>
 </Site>
+
+<script>
+  import { readingPosition } from '../lib/reading-position.mjs';
+
+  const imageDialog = document.querySelector<HTMLDialogElement>('.image-dialog')!;
+  const enlargedImage = imageDialog.querySelector<HTMLImageElement>('img')!;
+  document.querySelectorAll<HTMLImageElement>('.prose img').forEach((image) => {
+    if (image.closest('a')) return;
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'image-trigger';
+    image.replaceWith(button);
+    button.append(image);
+    button.addEventListener('click', () => {
+      enlargedImage.src = image.currentSrc || image.src;
+      enlargedImage.alt = image.alt;
+      imageDialog.showModal();
+    });
+  });
+  imageDialog.querySelector<HTMLButtonElement>('.image-dialog-close')!.addEventListener('click', () => imageDialog.close());
+  imageDialog.addEventListener('click', (event) => {
+    if (event.target === imageDialog) imageDialog.close();
+  });
+
+  const indicator = document.querySelector<HTMLElement>('.reading-position');
+  if (indicator) {
+    const chapterLabel = indicator.querySelector<HTMLElement>('[data-reading-chapter]')!;
+    const sectionLabel = indicator.querySelector<HTMLElement>('[data-reading-section]')!;
+    const separator = indicator.querySelector<HTMLElement>('[data-reading-separator]')!;
+    const headings = [...document.querySelectorAll<HTMLElement>('.prose > h2, .prose > .section-row > h3')];
+    const toc = document.querySelector<HTMLElement>('.article-toc')!;
+    const toggle = toc.querySelector<HTMLButtonElement>('.toc-toggle')!;
+    const list = toc.querySelector<HTMLOListElement>('.toc-list')!;
+    const links = [...toc.querySelectorAll<HTMLAnchorElement>('.toc-link')];
+    const ticks = [...toggle.querySelectorAll<HTMLElement>('[data-toc-tick]')];
+    toc.hidden = !links.length;
+    let queued = false;
+    let closeTimer: ReturnType<typeof setTimeout>;
+
+    function expand(open: boolean, restoreFocus = false) {
+      clearTimeout(closeTimer);
+      toc.dataset.expanded = String(open);
+      toggle.setAttribute('aria-expanded', String(open));
+      toggle.hidden = open;
+      list.hidden = !open;
+      if (restoreFocus) toggle.focus({ preventScroll: true });
+    }
+
+    toggle.addEventListener('click', () => {
+      expand(true);
+      (links.find((link) => link.hasAttribute('aria-current')) ?? links[0])?.focus({ preventScroll: true });
+    });
+    toc.addEventListener('pointerenter', (event) => {
+      if (event.pointerType === 'mouse') expand(true);
+    });
+    toc.addEventListener('pointerleave', () => {
+      if (!toc.contains(document.activeElement)) closeTimer = setTimeout(() => expand(false), 220);
+    });
+    toc.addEventListener('focusin', () => clearTimeout(closeTimer));
+    toc.addEventListener('focusout', () => {
+      requestAnimationFrame(() => {
+        if (!toc.contains(document.activeElement)) expand(false);
+      });
+    });
+    toc.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') expand(false, true);
+    });
+    links.forEach((link) => link.addEventListener('click', () => expand(false)));
+    document.addEventListener('pointerdown', (event) => {
+      if (!toc.contains(event.target as Node)) expand(false);
+    });
+
+    function update() {
+      queued = false;
+      const positions = headings.map((heading) => ({
+        id: heading.id,
+        level: Number(heading.tagName.slice(1)),
+        text: heading.textContent?.trim() ?? '',
+        top: heading.getBoundingClientRect().top,
+      }));
+      const boundary = 73; // Allow subpixel rounding at the 72px anchor offset.
+      const [chapter, section] = readingPosition(positions, boundary);
+      const activeId = positions.findLast(({ top }) => top <= boundary)?.id;
+      links.forEach((link, index) => {
+        const active = link.dataset.tocHeading === activeId;
+        if (active) link.setAttribute('aria-current', 'location');
+        else link.removeAttribute('aria-current');
+        ticks[index].toggleAttribute('data-active', active);
+      });
+      indicator!.hidden = !chapter && !section;
+      chapterLabel.textContent = chapter;
+      sectionLabel.textContent = section;
+      separator.hidden = !chapter || !section;
+    }
+
+    window.addEventListener('scroll', () => {
+      if (!queued) {
+        queued = true;
+        requestAnimationFrame(update);
+      }
+    }, { passive: true });
+    window.addEventListener('resize', update);
+    window.addEventListener('load', update);
+    update();
+  }
+</script>
