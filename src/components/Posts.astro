@@ -1,0 +1,117 @@
+---
+import { posts, labels, categoryLabels, url, type Category, type Language } from '../lib/site';
+import Site from '../layouts/Site.astro';
+import ArticleTypes from './ArticleTypes.astro';
+
+interface Props { lang: Language; category?: Category }
+const { lang, category } = Astro.props;
+const entries = await posts(category);
+const sortable = category !== 'personal';
+const listId = category === 'work' ? 'work-post-list' : !category ? 'all-post-list' : undefined;
+const prefix = lang === 'en' ? 'en/' : '';
+const filters = [{ path: '', label: 'All', category: undefined }, ...Object.entries(categoryLabels).map(([category, label]) => ({ path: `${category}/`, label, category }))];
+---
+<Site lang={lang} title={category ? `${categoryLabels[category]} · Posts` : labels[lang].posts} languagePath={`${lang === 'en' ? '' : 'en/'}posts/${category ? `${category}/` : ''}`}>
+  <section class="page" aria-labelledby="writing-title">
+    <h1 id="writing-title">{labels[lang].posts}</h1>
+    <p>{labels[lang].postsIntro}</p>
+    <nav class="post-filters" aria-label={labels[lang].categories}>
+      {filters.map((filter) => <a href={url(`${prefix}posts/${filter.path}`)} aria-current={filter.category === category ? 'page' : undefined}>{filter.label}</a>)}
+      {sortable && <details class="post-sort" id="post-sort">
+        <summary aria-label={lang === 'zh' ? '排序方式' : 'Sort posts'}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h4" /></svg>
+          <span data-sort-label>{lang === 'zh' ? '時間' : 'Time'}</span>
+          <svg class="sort-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m6 9 6 6 6-6" /></svg>
+        </summary>
+        <div class="sort-menu" role="group" aria-label={lang === 'zh' ? '排序方式' : 'Sort posts'}>
+          <label>
+            <input type="radio" name="post-sort" value="time" aria-controls={listId} checked />
+            <span>{lang === 'zh' ? '時間' : 'Time'}</span>
+          </label>
+          <label>
+            <input type="radio" name="post-sort" value="category" aria-controls={listId} />
+            <span>{lang === 'zh' ? '分類' : 'Category'}</span>
+          </label>
+        </div>
+      </details>}
+    </nav>
+    {category === 'work' && <ArticleTypes lang={lang} titles={entries.map((entry) => entry.data.title)} />}
+    <h2 class="posts-section-title" id="post-list-title">Posts List</h2>
+    {entries.length > 0 || sortable ? <ol class="post-list" id={listId} aria-labelledby="post-list-title" data-sort-key={sortable ? category === 'work' ? 'postType' : 'postCategory' : undefined} hidden={entries.length === 0}>
+      {entries.map((entry) => <li data-post-category={!category ? entry.data.category : undefined} data-post-date={sortable ? entry.data.date.toISOString() : undefined} data-post-type={category === 'work' ? entry.data.title.match(/^\[(InGuide|InSolve|InInput|InSpec)\]/)?.[1] ?? '' : undefined}>
+        {!category && <span class="post-category">{categoryLabels[entry.data.category]}</span>}
+        <a href={url(`${lang === 'en' ? 'en/' : ''}posts/${entry.id}/`)}>{entry.data.title}</a>
+        <time datetime={entry.data.date.toISOString()}>{entry.data.date.toISOString().slice(0, 10).replaceAll('-', '.')}</time>
+      </li>)}
+    </ol> : <p class="posts-empty">{labels[lang].empty}</p>}
+    {sortable && <p class="posts-empty" role="status" data-type-empty hidden={entries.length > 0}>{category === 'work' ? labels[lang].typeEmpty : labels[lang].empty}</p>}
+  </section>
+</Site>
+
+<script>
+  import { filterPostRows, sortPostRows } from '../lib/filter-posts.mjs';
+
+  const list = document.querySelector<HTMLOListElement>('.post-list[data-sort-key]');
+  const empty = document.querySelector<HTMLElement>('[data-type-empty]');
+  const sort = document.querySelector<HTMLDetailsElement>('#post-sort');
+  if (list && sort) {
+    const buttons = [...document.querySelectorAll<HTMLButtonElement>('[data-article-type]')];
+    const rows = [...list.querySelectorAll<HTMLLIElement>('li')];
+    const language = document.querySelector<HTMLAnchorElement>('.language')!;
+
+    const sortOptions = [...sort.querySelectorAll<HTMLInputElement>('input[name="post-sort"]')];
+    const sortTrigger = sort.querySelector<HTMLElement>('summary')!;
+    const sortName = sortTrigger.getAttribute('aria-label');
+    const sortLabel = sort.querySelector<HTMLElement>('[data-sort-label]')!;
+    const params = new URL(window.location.href).searchParams;
+    let selectedSort = params.get('sort') === 'category' ? 'category' : 'time';
+    sortOptions.forEach((option) => { option.checked = option.value === selectedSort; });
+    let selectedType = '';
+
+    function selectType(type: string) {
+      selectedType = type;
+      sortLabel.textContent = sortOptions.find((option) => option.checked)!.nextElementSibling!.textContent;
+      sortTrigger.setAttribute('aria-label', `${sortName}: ${sortLabel.textContent}`);
+      list!.append(...sortPostRows(rows, selectedSort, list!.dataset.sortKey));
+      const count = filterPostRows(rows, type);
+      list!.hidden = count === 0;
+      if (empty) empty.hidden = count > 0;
+      buttons.forEach((button) => button.setAttribute('aria-pressed', String(button.dataset.articleType === type)));
+
+      const pageURL = new URL(window.location.href);
+      const languageURL = new URL(language.href);
+      for (const url of [pageURL, languageURL]) {
+        if (type) url.searchParams.set('type', type);
+        else url.searchParams.delete('type');
+        if (selectedSort === 'category') url.searchParams.set('sort', 'category');
+        else url.searchParams.delete('sort');
+      }
+      window.history.replaceState(window.history.state, '', pageURL);
+      language.href = languageURL.href;
+    }
+
+    buttons.forEach((button) => button.addEventListener('click', () => selectType(selectedType === button.dataset.articleType ? '' : button.dataset.articleType!)));
+    sortOptions.forEach((option) => option.addEventListener('change', () => {
+      selectedSort = option.value;
+      selectType(selectedType);
+      sort.open = false;
+      sortTrigger.focus();
+    }));
+    sort.addEventListener('keydown', (event) => {
+      if (event.key === 'Escape') {
+        sort.open = false;
+        sortTrigger.focus();
+      }
+    });
+    document.addEventListener('pointerdown', (event) => {
+      if (!sort.contains(event.target as Node)) sort.open = false;
+    });
+    sort.addEventListener('focusout', () => {
+      requestAnimationFrame(() => {
+        if (!sort.contains(document.activeElement)) sort.open = false;
+      });
+    });
+    const requested = params.get('type') ?? '';
+    selectType(buttons.some((button) => button.dataset.articleType === requested) ? requested : '');
+  }
+</script>

@@ -1,0 +1,89 @@
+---
+import type { Language } from '../lib/site';
+
+interface Props { lang: Language; titles: string[] }
+const { lang, titles } = Astro.props;
+const copy = {
+  zh: {
+    title: 'Posts Types',
+    practice: '動手實作', knowledge: '理解與知識', learning: '學習', work: '完成工作',
+    types: [
+      { name: 'InGuide', prompt: '帶我入門', goal: '學習', approach: '動手實作' },
+      { name: 'InSolve', prompt: '幫我解題', goal: '完成工作', approach: '動手實作' },
+      { name: 'InInput', prompt: '懂為什麼', goal: '學習', approach: '理解與知識' },
+      { name: 'InSpec', prompt: '查什麼規格', goal: '完成工作', approach: '理解與知識' },
+    ],
+  },
+  en: {
+    title: 'Posts Types',
+    practice: 'Hands-on practice', knowledge: 'Understanding and knowledge', learning: 'Learning', work: 'Getting work done',
+    types: [
+      { name: 'InGuide', prompt: 'Get me started', goal: 'Learning', approach: 'Hands-on practice' },
+      { name: 'InSolve', prompt: 'Help me solve it', goal: 'Getting work done', approach: 'Hands-on practice' },
+      { name: 'InInput', prompt: 'Explain why', goal: 'Learning', approach: 'Understanding and knowledge' },
+      { name: 'InSpec', prompt: 'Find the specification', goal: 'Getting work done', approach: 'Understanding and knowledge' },
+    ],
+  },
+}[lang];
+---
+<section class="article-types" aria-labelledby="article-types-title">
+  <div class="type-heading">
+    <h2 class="posts-section-title" id="article-types-title">{copy.title}</h2>
+  </div>
+  <div class="type-map">
+    <span class="type-axis axis-top" aria-hidden="true">{copy.practice}</span>
+    <span class="type-axis axis-left" aria-hidden="true">{copy.learning}</span>
+    <div class="type-grid" role="group" aria-label={copy.title}>
+      <span class="type-axis-line axis-horizontal" aria-hidden="true"></span>
+      <span class="type-axis-line axis-vertical" aria-hidden="true"></span>
+      {copy.types.map((type) => {
+        const count = titles.filter((title) => title.startsWith(`[${type.name}]`)).length;
+        return <button class="type-entry" type="button" data-article-type={type.name} aria-pressed="false" aria-controls="work-post-list">
+          <span class="type-title"><strong>{type.name}</strong><span>{type.prompt}</span></span>
+          <span class="type-context">{type.goal} × {type.approach}</span>
+          <span class="type-count" aria-label={`${lang === 'zh' ? '文章數：' : 'Posts: '}${count}`}>{lang === 'zh' ? `${count} 篇` : `${count} ${count === 1 ? 'post' : 'posts'}`}</span>
+        </button>;
+      })}
+    </div>
+    <span class="type-axis axis-right" aria-hidden="true">{copy.work}</span>
+    <span class="type-axis axis-bottom" aria-hidden="true">{copy.knowledge}</span>
+  </div>
+</section>
+
+
+
+<style>
+  .type-heading { margin-bottom: 20px; }
+  button { min-height: 44px; border: 1px solid transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
+  button:focus-visible { outline: 2px solid #60789a; outline-offset: 3px; }
+  .type-axis, .type-axis-line { display: none; }
+  .type-grid { display: grid; gap: 12px; }
+  .type-entry { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-content: center; gap: 8px 16px; min-width: 0; min-height: 88px; padding: 16px 48px 16px 20px; border-radius: 10px; background: #f0f1ee; }
+  .type-entry::after { content: ''; position: absolute; top: 50%; right: 20px; width: 14px; height: 14px; transform: translateY(-50%); border: 1px solid #7e8973; border-radius: 50%; }
+  .type-entry:hover { background: #e9ede6; border-color: #bdc6b7; }
+  .type-entry[aria-pressed='true'] { background: #edf1f5; border-color: #71859c; }
+  .type-entry[aria-pressed='true']::after { border-color: #60789a; background: #60789a; box-shadow: inset 0 0 0 3px #edf1f5; }
+  .type-title { grid-column: 1; grid-row: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; line-height: 1.5; }
+  .type-title strong { font-size: 17px; font-weight: 600; letter-spacing: -.02em; }
+  .type-count { grid-column: 2; grid-row: 1 / 3; align-self: center; color: #686d65; font-size: 14px; font-variant-numeric: tabular-nums; line-height: 1.5; white-space: nowrap; }
+  .type-title > span { font-size: 16px; }
+  .type-context { grid-column: 1; grid-row: 2; color: #686d65; font-size: 14px; line-height: 1.5; }
+  @media (min-width: 768px) {
+    .type-entry { min-height: 72px; }
+    .type-count { grid-row: 1; }
+    .type-map { display: grid; grid-template-columns: fit-content(100px) minmax(0, 1fr) fit-content(100px); gap: 12px; }
+    .type-axis { display: block; color: #686d65; font-size: 14px; line-height: 1.5; text-align: center; }
+    .axis-top { grid-area: 1 / 2; }
+    .axis-left { grid-area: 2 / 1; align-self: center; }
+    .axis-right { grid-area: 2 / 3; align-self: center; }
+    .axis-bottom { grid-area: 3 / 2; }
+    .type-grid { position: relative; grid-area: 2 / 2; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; }
+    .type-axis-line { position: absolute; display: block; background: currentColor; color: #b9c1b3; pointer-events: none; }
+    .type-axis-line::after { content: ''; position: absolute; width: 5px; height: 5px; border-top: 1px solid; border-right: 1px solid; }
+    .axis-horizontal { top: 50%; left: -8px; right: -8px; height: 1px; }
+    .axis-horizontal::after { top: -2px; right: 0; transform: rotate(45deg); }
+    .axis-vertical { left: 50%; top: -8px; bottom: -8px; width: 1px; }
+    .axis-vertical::after { top: 0; left: -2px; transform: rotate(-45deg); }
+    .type-context { position: absolute; width: 1px; height: 1px; padding: 0; margin: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  }
+</style>

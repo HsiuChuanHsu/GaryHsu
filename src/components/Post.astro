@@ -30,10 +30,10 @@ const outline = headings.filter(({ depth }) => depth === 2 || depth === 3);
     </ol>
   </nav>
   <article class="article">
-    <a class="back" href={url(lang === 'en' ? 'en/' : '')}>← {labels[lang].back}</a>
+    <a class="back" href={url(`${lang === 'en' ? 'en/' : ''}posts/`)}>← {labels[lang].back}</a>
     <header>
       <h1>{post.data.title}</h1>
-      <time datetime={post.data.date.toISOString()}>{new Intl.DateTimeFormat(lang === 'zh' ? 'zh-TW' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric' }).format(post.data.date)}</time>
+      <time datetime={post.data.date.toISOString()}>{new Intl.DateTimeFormat(lang === 'zh' ? 'zh-TW' : 'en-US', { year: 'numeric', month: 'long', day: 'numeric', timeZone: 'UTC' }).format(post.data.date)}</time>
     </header>
     <div class="prose" lang={post.data.lang === 'zh' ? 'zh-Hant' : 'en'}><Content /></div>
   </article>
@@ -45,6 +45,15 @@ const outline = headings.filter(({ depth }) => depth === 2 || depth === 3);
 
 <script>
   import { readingPosition } from '../lib/reading-position.mjs';
+
+  const backLink = document.querySelector<HTMLAnchorElement>('.back')!;
+  if (document.referrer) {
+    const referrer = new URL(document.referrer);
+    const listPath = new URL(backLink.href).pathname;
+    if (referrer.origin === window.location.origin && ['', 'work/', 'personal/'].some((category) => referrer.pathname === `${listPath}${category}`)) {
+      backLink.href = referrer.href;
+    }
+  }
 
   const imageDialog = document.querySelector<HTMLDialogElement>('.image-dialog')!;
   const enlargedImage = imageDialog.querySelector<HTMLImageElement>('img')!;

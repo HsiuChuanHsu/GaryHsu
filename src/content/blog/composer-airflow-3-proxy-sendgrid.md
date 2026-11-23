@@ -2,6 +2,7 @@
 title: "[InSolve] Composer Airflow 3 環境移除 Proxy 與 SendGrid 問題"
 date: 2026-09-18
 lang: zh
+category: work
 ---
 
 ## Overview
