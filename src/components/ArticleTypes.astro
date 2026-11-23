@@ -1,8 +1,8 @@
 ---
 import type { Language } from '../lib/site';
 
-interface Props { lang: Language }
-const { lang } = Astro.props;
+interface Props { lang: Language; titles: string[] }
+const { lang, titles } = Astro.props;
 const copy = {
   zh: {
     title: 'Posts Types',
@@ -36,10 +36,14 @@ const copy = {
     <div class="type-grid" role="group" aria-label={copy.title}>
       <span class="type-axis-line axis-horizontal" aria-hidden="true"></span>
       <span class="type-axis-line axis-vertical" aria-hidden="true"></span>
-      {copy.types.map((type) => <button class="type-entry" type="button" data-article-type={type.name} aria-pressed="false" aria-controls="work-post-list">
-        <span class="type-title"><strong>{type.name}</strong><span>{type.prompt}</span></span>
-        <span class="type-context">{type.goal} × {type.approach}</span>
-      </button>)}
+      {copy.types.map((type) => {
+        const count = titles.filter((title) => title.startsWith(`[${type.name}]`)).length;
+        return <button class="type-entry" type="button" data-article-type={type.name} aria-pressed="false" aria-controls="work-post-list">
+          <span class="type-title"><strong>{type.name}</strong><span>{type.prompt}</span></span>
+          <span class="type-context">{type.goal} × {type.approach}</span>
+          <span class="type-count" aria-label={`${lang === 'zh' ? '文章數：' : 'Posts: '}${count}`}>{lang === 'zh' ? `${count} 篇` : `${count} ${count === 1 ? 'post' : 'posts'}`}</span>
+        </button>;
+      })}
     </div>
     <span class="type-axis axis-right" aria-hidden="true">{copy.work}</span>
     <span class="type-axis axis-bottom" aria-hidden="true">{copy.knowledge}</span>
@@ -54,17 +58,19 @@ const copy = {
   button:focus-visible { outline: 2px solid #60789a; outline-offset: 3px; }
   .type-axis, .type-axis-line { display: none; }
   .type-grid { display: grid; gap: 12px; }
-  .type-entry { position: relative; display: flex; flex-direction: column; justify-content: center; gap: 8px; min-width: 0; min-height: 88px; padding: 16px 20px; border-radius: 10px; background: #f0f1ee; }
+  .type-entry { position: relative; display: grid; grid-template-columns: minmax(0, 1fr) auto; align-content: center; gap: 8px 16px; min-width: 0; min-height: 88px; padding: 16px 48px 16px 20px; border-radius: 10px; background: #f0f1ee; }
   .type-entry::after { content: ''; position: absolute; top: 50%; right: 20px; width: 14px; height: 14px; transform: translateY(-50%); border: 1px solid #7e8973; border-radius: 50%; }
   .type-entry:hover { background: #e9ede6; border-color: #bdc6b7; }
   .type-entry[aria-pressed='true'] { background: #edf1f5; border-color: #71859c; }
   .type-entry[aria-pressed='true']::after { border-color: #60789a; background: #60789a; box-shadow: inset 0 0 0 3px #edf1f5; }
-  .type-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; padding-right: 24px; line-height: 1.5; }
+  .type-title { grid-column: 1; grid-row: 1; min-width: 0; display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; line-height: 1.5; }
   .type-title strong { font-size: 17px; font-weight: 600; letter-spacing: -.02em; }
+  .type-count { grid-column: 2; grid-row: 1 / 3; align-self: center; color: #686d65; font-size: 14px; font-variant-numeric: tabular-nums; line-height: 1.5; white-space: nowrap; }
   .type-title > span { font-size: 16px; }
-  .type-context { color: #686d65; font-size: 14px; line-height: 1.5; }
+  .type-context { grid-column: 1; grid-row: 2; color: #686d65; font-size: 14px; line-height: 1.5; }
   @media (min-width: 768px) {
     .type-entry { min-height: 72px; }
+    .type-count { grid-row: 1; }
     .type-map { display: grid; grid-template-columns: fit-content(100px) minmax(0, 1fr) fit-content(100px); gap: 12px; }
     .type-axis { display: block; color: #686d65; font-size: 14px; line-height: 1.5; text-align: center; }
     .axis-top { grid-area: 1 / 2; }

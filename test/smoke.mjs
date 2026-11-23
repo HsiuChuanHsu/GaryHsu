@@ -99,6 +99,11 @@ test('only Work pages explain all four writing types before the article list', (
     for (const name of ['InGuide', 'InSolve', 'InInput', 'InSpec']) {
       assert.ok(explanation.includes(name));
       assert.ok(explanation.includes(`data-article-type="${name}" aria-pressed="false" aria-controls="work-post-list"`));
+      const count = [...html.matchAll(/data-post-type="([^"]*)"/g)].filter((match) => match[1] === name).length;
+      const button = explanation.match(new RegExp(`<button[^>]*data-article-type="${name}"[\\s\\S]*?</button>`))?.[0];
+      assert.ok(button?.includes(`aria-label="${prefix ? 'Posts: ' : '文章數：'}${count}"`), `${name} needs its published post count`);
+      const countLabel = prefix ? `${count} ${count === 1 ? 'post' : 'posts'}` : `${count} 篇`;
+      assert.match(button, new RegExp(`class="type-count"[^>]*>${countLabel}</span>`));
     }
     assert.equal((explanation.match(/data-article-type=/g) ?? []).length, 4);
     assert.doesNotMatch(explanation, /data-article-type=""/);
