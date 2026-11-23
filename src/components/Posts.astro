@@ -36,7 +36,7 @@ const filters = [{ path: '', label: 'All', category: undefined }, ...Object.entr
       </details>}
     </nav>
     {category === 'work' && <ArticleTypes lang={lang} />}
-    <h2 class="posts-section-title" id="post-list-title">Articles</h2>
+    <h2 class="posts-section-title" id="post-list-title">Posts List</h2>
     {entries.length > 0 || sortable ? <ol class="post-list" id={listId} aria-labelledby="post-list-title" data-sort-key={sortable ? category === 'work' ? 'postType' : 'postCategory' : undefined} hidden={entries.length === 0}>
       {entries.map((entry) => <li data-post-category={!category ? entry.data.category : undefined} data-post-date={sortable ? entry.data.date.toISOString() : undefined} data-post-type={category === 'work' ? entry.data.title.match(/^\[(InGuide|InSolve|InInput|InSpec)\]/)?.[1] ?? '' : undefined}>
         {!category && <span class="post-category">{categoryLabels[entry.data.category]}</span>}
