@@ -2,6 +2,7 @@
 title: "[InInput] 從我的 Airflow PR 到更好的解法：Celery Worker Groups 的設計比較"
 date: 2025-11-01
 lang: zh
+category: work
 ---
 
 ## Overview

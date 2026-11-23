@@ -19,12 +19,15 @@ Create `src/content/blog/my-post.md`:
 title: My post
 date: 2026-11-07
 lang: en
+category: personal
 ---
 
 Write here.
 ```
 
-Use `lang: zh` for a Traditional Chinese article. Both homepages list every published post. Add `draft: true` to keep a post out of the build. Filenames become article URLs; changing a filename changes its URL.
+Use `lang: zh` for a Traditional Chinese article. The `Posts` navigation link opens the list of published posts at `/posts/` or `/en/posts/`; homepages show only the introduction. Add `draft: true` to keep a post out of the build. Filenames become article URLs; changing a filename changes its URL.
+
+Every post requires `category: work` (work practice and project experience) or `category: personal` (independent research, side projects, reading, and life). Posts offers All, Work, and Personal filters at `/posts/`, `/posts/work/`, and `/posts/personal/`, with matching `/en/` routes. Language switching keeps the selected category. When arriving from a same-language list, the article's return link keeps that list; direct article visits return to All. Category names are reserved post slugs: do not name a post `work.md` or `personal.md`.
 
 Use `##` for full-width article chapters and `###` for a left-hand section label. Content after each `###` renders in the right column until the next `###`, `##`, or `#`. Use `####` for headings inside that content. On narrow screens, the label stacks above the content. Ordinary Markdown images, lists, tables, and code blocks work inside each section.
 
