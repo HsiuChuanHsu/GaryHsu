@@ -4,9 +4,18 @@ import Site from '../layouts/Site.astro';
 
 interface Props { lang: Language }
 const { lang } = Astro.props;
+const intro = lang === 'zh'
+  ? ['我是 Gary，關注資料工程、資料平台和系統設計。', '在這裡記錄工作中解決的問題、技術選擇背後的思考，以及個人探索。']
+  : ["I'm Gary. I focus on data engineering, data platforms, and system design.", 'Here I share problems I solve at work, the thinking behind technical decisions, and personal explorations.'];
 ---
 <Site lang={lang}>
   <section class="intro" aria-labelledby="site-title">
     <h1 id="site-title">Gary Hsu</h1>
+    {intro.map((text) => <p>{text}</p>)}
   </section>
 </Site>
+
+<style>
+  .intro p { max-width: 40rem; margin: 12px 0 0; color: #4f534d; font-size: 18px; line-height: 1.8; }
+  .intro h1 + p { margin-top: 28px; }
+</style>
