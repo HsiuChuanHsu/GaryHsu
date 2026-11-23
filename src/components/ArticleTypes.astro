@@ -28,12 +28,14 @@ const copy = {
 ---
 <section class="article-types" aria-labelledby="article-types-title">
   <div class="type-heading">
-    <h2 id="article-types-title">{copy.title}</h2>
+    <h2 class="posts-section-title" id="article-types-title">{copy.title}</h2>
   </div>
   <div class="type-map">
     <span class="type-axis axis-top" aria-hidden="true">{copy.practice}</span>
     <span class="type-axis axis-left" aria-hidden="true">{copy.learning}</span>
     <div class="type-grid" role="group" aria-label={copy.title}>
+      <span class="type-axis-line axis-horizontal" aria-hidden="true"></span>
+      <span class="type-axis-line axis-vertical" aria-hidden="true"></span>
       {copy.types.map((type) => <button class="type-entry" type="button" data-article-type={type.name} aria-pressed="false" aria-controls="work-post-list">
         <span class="type-title"><strong>{type.name}</strong><span>{type.prompt}</span></span>
         <span class="type-context">{type.goal} × {type.approach}</span>
@@ -47,12 +49,10 @@ const copy = {
 
 
 <style>
-  .article-types { margin: 28px 0; }
   .type-heading { margin-bottom: 20px; }
-  h2 { margin: 0 0 4px; font-size: 16px; font-weight: 550; }
   button { min-height: 44px; border: 1px solid transparent; color: inherit; font: inherit; text-align: left; cursor: pointer; }
   button:focus-visible { outline: 2px solid #60789a; outline-offset: 3px; }
-  .type-axis { display: none; }
+  .type-axis, .type-axis-line { display: none; }
   .type-grid { display: grid; gap: 12px; }
   .type-entry { position: relative; display: flex; flex-direction: column; justify-content: center; gap: 8px; min-width: 0; min-height: 88px; padding: 16px 20px; border-radius: 10px; background: #f0f1ee; }
   .type-entry::after { content: ''; position: absolute; top: 50%; right: 20px; width: 14px; height: 14px; transform: translateY(-50%); border: 1px solid #7e8973; border-radius: 50%; }
@@ -71,7 +71,13 @@ const copy = {
     .axis-left { grid-area: 2 / 1; align-self: center; }
     .axis-right { grid-area: 2 / 3; align-self: center; }
     .axis-bottom { grid-area: 3 / 2; }
-    .type-grid { grid-area: 2 / 2; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; }
+    .type-grid { position: relative; grid-area: 2 / 2; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-auto-rows: 1fr; }
+    .type-axis-line { position: absolute; display: block; background: currentColor; color: #b9c1b3; pointer-events: none; }
+    .type-axis-line::after { content: ''; position: absolute; width: 5px; height: 5px; border-top: 1px solid; border-right: 1px solid; }
+    .axis-horizontal { top: 50%; left: -8px; right: -8px; height: 1px; }
+    .axis-horizontal::after { top: -2px; right: 0; transform: rotate(45deg); }
+    .axis-vertical { left: 50%; top: -8px; bottom: -8px; width: 1px; }
+    .axis-vertical::after { top: 0; left: -2px; transform: rotate(-45deg); }
     .type-context { position: absolute; width: 1px; height: 1px; padding: 0; margin: 0; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
   }
 </style>
