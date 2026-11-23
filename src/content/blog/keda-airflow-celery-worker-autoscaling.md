@@ -1,5 +1,5 @@
 ---
-title: 使用 KEDA 實現 Airflow CeleryExecutor Worker 自動擴展：部署與運作原理
+title: "[InGuide] 使用 KEDA 實現 Airflow CeleryExecutor Worker 自動擴展：部署與運作原理"
 date: 2025-11-15
 lang: zh
 ---
