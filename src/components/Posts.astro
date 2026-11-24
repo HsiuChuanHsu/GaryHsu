@@ -14,9 +14,15 @@ const filters = [{ path: '', label: 'All', category: undefined }, ...Object.entr
 <Site lang={lang} title={category ? `${categoryLabels[category]} · Posts` : labels[lang].posts} languagePath={`${lang === 'en' ? '' : 'en/'}posts/${category ? `${category}/` : ''}`}>
   <section class="page" aria-labelledby="writing-title">
     <h1 id="writing-title">{labels[lang].posts}</h1>
-    <p>{labels[lang].postsIntro}</p>
-    <nav class="post-filters" aria-label={labels[lang].categories}>
-      {filters.map((filter) => <a href={url(`${prefix}posts/${filter.path}`)} aria-current={filter.category === category ? 'page' : undefined}>{filter.label}</a>)}
+    <div class="posts-heading-row">
+      <p>{labels[lang].postsIntro}</p>
+      <nav class="post-filters" aria-label={labels[lang].categories}>
+        {filters.map((filter) => <a href={url(`${prefix}posts/${filter.path}`)} aria-current={filter.category === category ? 'page' : undefined}>{filter.label}</a>)}
+      </nav>
+    </div>
+    {category === 'work' && <ArticleTypes lang={lang} titles={entries.map((entry) => entry.data.title)} />}
+    <div class="posts-section-title posts-list-heading">
+      <h2 id="post-list-title">Posts List</h2>
       {sortable && <details class="post-sort" id="post-sort">
         <summary aria-label={lang === 'zh' ? '排序方式' : 'Sort posts'}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" aria-hidden="true"><path d="M4 6h16M4 12h10M4 18h4" /></svg>
@@ -34,9 +40,7 @@ const filters = [{ path: '', label: 'All', category: undefined }, ...Object.entr
           </label>
         </div>
       </details>}
-    </nav>
-    {category === 'work' && <ArticleTypes lang={lang} titles={entries.map((entry) => entry.data.title)} />}
-    <h2 class="posts-section-title" id="post-list-title">Posts List</h2>
+    </div>
     {entries.length > 0 || sortable ? <ol class="post-list" id={listId} aria-labelledby="post-list-title" data-sort-key={sortable ? category === 'work' ? 'postType' : 'postCategory' : undefined} hidden={entries.length === 0}>
       {entries.map((entry) => <li data-post-category={!category ? entry.data.category : undefined} data-post-date={sortable ? entry.data.date.toISOString() : undefined} data-post-type={category === 'work' ? entry.data.title.match(/^\[(InGuide|InSolve|InInput|InSpec)\]/)?.[1] ?? '' : undefined}>
         {!category && <span class="post-category">{categoryLabels[entry.data.category]}</span>}
